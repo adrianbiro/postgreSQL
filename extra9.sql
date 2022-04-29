@@ -23,12 +23,38 @@ CREATE TABLE "Playlist"
     CONSTRAINT "PK_Playlist" PRIMARY KEY  ("PlaylistId")
 );
 
+-- toto je spojovacia tabulka
 CREATE TABLE "PlaylistTrack"
 (
     "PlaylistId" INT NOT NULL,
     "TrackId" INT NOT NULL,
     CONSTRAINT "PK_PlaylistTrack" PRIMARY KEY  ("PlaylistId", "TrackId")
-);
+); --PRIMARY KEY ako kombo dvoch ID
+
+/*
+SELECT *
+FROM "Playlist"
+
+SELECT *
+FROM "Track"
+
+SELECT *
+FROM "PlaylistTrack"
+
+-- Ako sa volá prvá skladba podľa abecedy z playlistov, ktorých názov  je tvorený aspoň 12 písmenami 
+SELECT t."Name" 
+FROM "PlaylistTrack" plt
+JOIN "Playlist" pl 
+	ON pl."PlaylistId"=plt."PlaylistId"
+	AND LENGTH(pl."Name") > 12
+JOIN "Track" t 
+	ON t."TrackId"=plt."TrackId"
+ORDER BY t."Name"
+
+*/
+
+
+/*DOLE SU LEN DATA v pgadmine Ctrl + Shift + End oznaci vsetko*/
 
 INSERT INTO "Track" ("TrackId", "Name", "AlbumId", "MediaTypeId", "GenreId", "Composer", "Milliseconds", "Bytes", "UnitPrice") VALUES (1, N'For Those About To Rock (We Salute You)', 1, 1, 1, N'Angus Young, Malcolm Young, Brian Johnson', 343719, 11170334, 0.99);
 INSERT INTO "Track" ("TrackId", "Name", "AlbumId", "MediaTypeId", "GenreId", "Milliseconds", "Bytes", "UnitPrice") VALUES (2, N'Balls to the Wall', 2, 2, 1, 342562, 5510424, 0.99);
