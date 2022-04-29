@@ -42,20 +42,22 @@ SELECT *
 FROM test1
 INNER JOIN test2
 	ON test1.username=test2.username
-
+	
 -- LEFT JOIN/LEFT OUTER JOIN
 -- ukaz celu prvu a ak ma par v druhej na pravo tak ten par
 SELECT * 
 FROM test1
 LEFT JOIN test2
 	ON test1.username=test2.username
-	
+
 -- RIGHT JOIN/RIGHT OUTER JOIN 
 -- to ale na opak
 SELECT * 
 FROM test1
 RIGHT JOIN test2
 	ON test1.username=test2.username
+
+
 -- Table from which you are taking data is 'LEFT'.
 -- Table you are joining is 'RIGHT'.
 -- LEFT JOIN: Take all items from left table AND (only) matching items from right table.
@@ -63,26 +65,38 @@ RIGHT JOIN test2
 
 
 -- zorad zhodne, ked je unikum daj null
+/*The FULL OUTER JOIN keyword returns all records when 
+there is a match in left (table1) or right (table2) table records.*/
 SELECT * 
 FROM test1
 FULL OUTER JOIN test2
 	ON test1.username=test2.username
 	
+	
 -- CROS JOIN Toto je specialny pripad takzvany karteziansky sucin kde kombinujeme 
 -- kazdy zaznam s kazdym 
 -- mnozina vsetkych dvojic a ich usporiadani teda 12 a 21 sa tam objavi 
 -- nie je to ako kombinatorika ze len uniq kombo,
+/*The SQL CROSS JOIN produces a result set which is the number of rows
+in the first table multiplied by the number of rows in the second table
+if no WHERE clause is used along with CROSS JOIN.This kind of result is
+called as Cartesian Product.
+If WHERE clause is used with CROSS JOIN, it functions like an INNER JOIN.*/
 SELECT * 
 FROM test1
 CROSS JOIN test2
 
-
--- UNION nahodne usporiadane zjednotene mnoziny asi?
+-- UNION nahodne usporiadane lebo kombinuje set teda len rozne hodnoty
+-- je tu dva krat SELECT * na rozdiel od predosleho
 SELECT *
 FROM test1
 UNION 
 SELECT *
-FROM test2
+FROM test2;
+-- takto zapisane ako dva celky to vidiet lepsie 
+SELECT * FROM test1 
+UNION 
+SELECT * FROM test2;
 
 
 -- pocet stlpcov a datovy typ musia byt tie iste toto da chybu
@@ -98,13 +112,16 @@ VALUES
     (1, 'Jano', 'BMW'),
     (2, 'Miso', 'BMW'),
     (3, 'Fero', 'BMW');
-	
--- SELECT *
--- FROM test1
--- UNION 
--- SELECT *
--- FROM test3
--- TOTO spravi chybu
+
+SELECT * FROM test3;
+ /*
+SELECT *
+FROM test1
+UNION 
+SELECT *
+FROM test3
+*/
+-- TOTO spravi chybu musia mat rovnaky pocet na porovnanie 
 -- UNION maze dupllikaty vo vysledku ak ichc chceme zachovat musime pouzit UNION ALL
 
 --INTERSECT prienik iba to co je v oboch a ma rovnake id a podobne
@@ -113,12 +130,16 @@ FROM test1
 INTERSECT 
 SELECT *
 FROM test2
+-- aj tu sa dva krat SELECT * ako pri UNION
+SELECT * FROM test1
+INTERSECT
+SELECT * FROM test2;
 
 -- EXCEPT zvysok co sa nezhoduje 
 -- teda select minus to co sa zhoduje
 SELECT *
 FROM test1
-EXCEPT 
+EXCEPT -- aj tu je dva krat SELECT * FROM ...
 SELECT *
 FROM test2
 
@@ -128,7 +149,9 @@ DROP TABLE IF EXISTS test2;
 -----
 -----
 
-
+/* A foreign key with cascade delete means that if a record in the 
+parent table is deleted, then the corresponding records in the child
+table will automatically be deleted. */
 
 DROP TABLE IF EXISTS "Customer" CASCADE;
 DROP TABLE IF EXISTS "Invoice" CASCADE;
@@ -649,14 +672,13 @@ FROM "Customer"
 
 SELECT *
 FROM "Invoice"
--- TODO 
--- TODO
+
 -- Co ak chcem najst meno a priezvisko zakaznika co zaplatil najvacsi ucet + cena uctu?
 SELECT "FirstName", "LastName", "Total"
 FROM "Invoice"
 JOIN "Customer"
 	ON "Invoice"."CustomerId" = "Customer"."CustomerId"
-ORDER BY "Invoice"."Total" DESC
+ORDER BY "Invoice"."Total" DESC;
 
 
 -- suhrn kolo zaplatili fran a heleny
@@ -666,8 +688,8 @@ FROM "Invoice"
 JOIN "Customer"
 	ON "Invoice"."CustomerId" = "Customer"."CustomerId"
 WHERE
--- "Invoice"."BillingCountry" = 'France'
- "Customer"."FirstName" = 'Helena'
+ "Invoice"."BillingCountry" = 'France'
+-- "Customer"."FirstName" = 'Helena'
 
     
 
