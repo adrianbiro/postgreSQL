@@ -175,8 +175,15 @@ SELECT timestamp_column::VARCHAR(10)
 FROM date_time_types;
 
 -- TODO uloha na konci
+REAL  -- na sledovanie mil
+VARCHAR(50) alebo TEXT /*oddelene meno priezvisko, lebo sa lepsie manipuluje
+da sa lepsie zoradit podla. nemusi sa riesit v ako poradi vlozit ci najpr priez. 
+potom meno, co s space a podobne*/
 
-
-
+INSERT INTO people (person_name)
+VALUES ('4//2021');
+SELECT person_name, CAST(person_name AS TIMESTAMP) -- toto da chybu
+FROM people
+WHERE person_name like '4%'
 
 
