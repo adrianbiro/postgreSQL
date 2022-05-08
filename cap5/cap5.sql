@@ -105,7 +105,7 @@ COPY (
     FROM us_counties_pop_est_2019
     WHERE county_name ILIKE '%mill%'
 )
-TO '/tmp/us_counties_export.txt'
+TO '/home/adrian/gits/postgreSQL/share/us_counties_export.txt'
 WITH (FORMAT CSV, HEADER, QUOTE '"'); --comma-separated je default 
 
 /*Import v pgAdmin

@@ -77,4 +77,99 @@ SELECT county_name AS county,
        area_water::numeric / (area_land + area_water) * 100 AS pct_water
 FROM us_counties_pop_est_2019
 ORDER BY pct_water DESC;
+----
+/*percent change
+formula
+(new_number - old_number) / old_number
+*/
+ CREATE TABLE percent_change (
+ 	department TEXT,
+	 spend_2019 NUMERIC(10,2),
+	 spend_2022 NUMERIC(10,2)
+ );
+ 
+ INSERT INTO percent_change 
+ VALUES
+     ('Assessor', 178556, 179500),
+    ('Building', 250000, 289000),
+    ('Clerk', 451980, 650000),
+    ('Library', 87777, 90001),
+    ('Parks', 250000, 223000),
+    ('Water', 199000, 195000);
+ 
+ 
+ 
+SELECT department,
+ 		spend_2019,
+		spend_2022,
+		ROUND((spend_2022 - spend_2019) / spend_2019 * 100, 1) AS pct_change
+FROM percent_change;
+ 
+ /*Aggregate Functions of Averages and Sums
+ */
+SELECT SUM(pop_est_2019) AS county_sum,
+ 		ROUND(AVG(pop_est_2019), 0) AS county_average
+FROM us_counties_pop_est_2019;
+
+/*Median
+na rozdiel od excelu nema sql nativnu median funkciu robi sa to cey percentile
+*/
+CREATE TABLE percentile_test (
+	numbers INTEGER
+);
+INSERT INTO percentile_test
+VALUES (1), (2), (3), (4), (5), (6);
+
+SELECT
+ 	PERCENTILE_CONT(.5)  -- .5 je 50th percentile, equivalent to median
+	WITHIN GROUP (ORDER BY numbers),
+	PERCENTILE_DISC(.5)
+	WITHIN GROUP (ORDER BY numbers)
+FROM percentile_test;
+ 
+SELECT SUM(pop_est_2019) AS county_sum,
+       ROUND(AVG(pop_est_2019), 0) AS county_average,
+       PERCENTILE_CONT(.5)
+       WITHIN GROUP (ORDER BY pop_est_2019) AS county_median
+FROM us_counties_pop_est_2019;
+
+/*
+PERCENTILE_CONT(.25)  -- da lowest 25 percent of data
+*/
+-- da to spodnu stvrtinu median a hornu stvrtinu
+SELECT percentile_cont(ARRAY[.25,.5,.75])  -- value sa da zadat ako array a da to CSV v {}
+       WITHIN GROUP (ORDER BY pop_est_2019) AS quartiles
+FROM us_counties_pop_est_2019;
+
+
+-- quintiles
+SELECT percentile_cont(ARRAY[.2,.4,.6,.8])
+       WITHIN GROUP (ORDER BY pop_est_2019) AS quintiles
+FROM us_counties_pop_est_2019;
+
+-- deciles
+SELECT percentile_cont(ARRAY[.1,.2,.3,.4,.5,.6,.7,.8,.9])
+       WITHIN GROUP (ORDER BY pop_est_2019) AS deciles
+FROM us_counties_pop_est_2019;
+
+-- Using unnest() to turn an array into rows
+
+SELECT UNNEST(
+            percentile_cont(ARRAY[.25,.5,.75])
+            WITHIN GROUP (ORDER BY pop_est_2019)
+            ) AS quartiles
+FROM us_counties_pop_est_2019;
+
+-- Finding the most-frequent value with mode()
+
+SELECT MODE() WITHIN GROUP (ORDER BY births_2019)
+FROM us_counties_pop_est_2019;
+
+-- TODO uloha
+
+
+
+
+
+
 
