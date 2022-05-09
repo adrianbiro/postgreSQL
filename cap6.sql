@@ -166,10 +166,18 @@ SELECT MODE() WITHIN GROUP (ORDER BY births_2019)
 FROM us_counties_pop_est_2019;
 
 -- TODO uloha
+/* objem kruhu 
+2 * pi * r
+plocha
+pi * r na druhu
+*/
+SELECT 2 * 3.14 * 5;
+SELECT 3.14 * (5 ^ 2);
 
 
-
-
-
-
-
+SELECT county_name AS "NY_county", 
+	births_2019, deaths_2019,
+	births_2019 - deaths_2019 AS natural_increase
+FROM us_counties_pop_est_2019
+WHERE state_name = 'New York'
+ORDER BY natural_increase DESC
