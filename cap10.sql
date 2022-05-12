@@ -264,22 +264,50 @@ ALTER TABLE meat_poultry_egg_establishments_temp
     RENAME TO meat_poultry_egg_establishments_backup;
 
 -- zadanie
--- TODO 
+ 
+
+ALTER TABLE meat_poultry_egg_establishments
+	ADD COLUMN meat_processing BOOLEAN,
+	ADD COLUMN poultry_processing BOOLEAN;
+
+UPDATE meat_poultry_egg_establishments meat_processing
+SET meat_processing = TRUE --NULL
+--SELECT activities, meat_processing FROM meat_poultry_egg_establishments 
+--where activities = 'Meat Processing';
+where activities ILIKE '%meat processing%';
+
+UPDATE meat_poultry_egg_establishments poultry_processing
+SET poultry_processing = TRUE --NULL
+--SELECT activities, poultry_processing FROM meat_poultry_egg_establishments 
+--where activities = 'Poultry Processing';
+where activities ILIKE '%poultry processing%';
 
 
+-- CASE verzia nefunguje --TODO
+START TRANSACTION;
+UPDATE meat_poultry_egg_establishments  
+SET meat_processing = CASE
+		WHEN (activities = 'Meat Processing')
+			THEN meat_processing = TRUE
+		END,
+	poultry_processing = CASE	
+		WHEN (activities = 'Poultry Processing')
+			THEN poultry_processing = TRUE
+		END;
 
+SELECT activities, poultry_processing FROM meat_poultry_egg_establishments 
+where activities = 'Poultry Processing';
+ 
+COMMIT 
+ROLLBACK 
+---
+-- kolko zariadeni spracuva 
+SELECT count(poultry_processing) AS poultry, count(meat_processing) AS meat
+FROM meat_poultry_egg_establishments
 
-
-
-
-
-
-
-
-
-
-
-
+SELECT count(*)
+FROM meat_poultry_egg_establishments
+WHERE meat_processing = TRUE AND poultry_processing = TRUE;
 
 
 
