@@ -197,5 +197,24 @@ SET TIME ZONE 'US/Central';
 
 SELECT * FROM train_rides;
 
+SELECT segment,
+       to_char(departure, 'YYYY-MM-DD HH12:MI a.m. TZ') AS departure,
+       arrival - departure AS segment_duration
+FROM train_rides;
 
+-- Calculating cumulative intervals using OVER
+SELECT segment,
+       arrival - departure AS segment_duration,
+       sum(arrival - departure) OVER (ORDER BY trip_id) AS cume_duration
+FROM train_rides;
+
+-- Using justify_interval() to better format cumulative trip duration
+
+SELECT segment,
+       arrival - departure AS segment_duration,
+       justify_interval(sum(arrival - departure)
+                        OVER (ORDER BY trip_id)) AS cume_duration
+FROM train_rides;
+
+-- Zadanie
 
