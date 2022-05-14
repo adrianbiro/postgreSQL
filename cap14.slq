@@ -1,0 +1,419 @@
+/*Mining text
+
+*/
+upper('string')  -- STRING
+lower('STRING')  -- string
+-- postgres specific
+initcap('da title case')    -- Da Title Case
+char_length(string)
+char_length(  string  )  --pocita aj space
+
+ position(substring in string) 
+        position(', ' in 'Tan, Bella') -- returns 4,
+
+trim(character from string)
+    trim('s' from 'socks')
+    trim(trailing 's' from 'socks') -- returns sock.
+        -- leading
+
+-- ak sa nic nespecifikuje tak da dole spaces
+    -- da sa zavolat z funkcie 
+SELECT char_length(trim(' Pat '));
+-- postgres specific
+ltrim(string, characters) 
+rtrim(string, characters) 
+SELECT rtrim('socks', 's') -- returns sock
+/*
+Extracting and replacing characters
+*/
+
+left(string, number)
+right(string, number)  -- pocet char zo strany
+SELECT left('703-555-1212', 3);  -- returns 703
+SELECT right('703-555-1212', 8)   -- 555-1212
+
+replace(string, from, to) 
+SELECT replace('bat', 'b', 'c') -- cat
+
+/*
+REGEX
+su viac menej klasika
+.
+[Char_to_match]
+[a-z]   -- range
+[^a-z]  -- ignore
+\w      -- ako kolvek slovo, cislo a _ rovnako ako [A-Za-z0-9_]
+\d      -- digit
+\s      -- space
+\t
+\n
+\r      -- Carrige return
+^       -- start of string
+$       -- end
+?       -- predchadzajuci 0 alebo 1 krat
+*       -- nula a viac krat
++       -- jeden a viac krat
+{m}     -- predchadzajuci m-krat
+{m,n}   -- predchadzajuci medzi m a n
+a|b     -- aleracia a alebo b
+()      -- group
+(?: )   -- Negate the reporting of capture gropu
+        -- toto som este nevidel
+*/
+/* priklad
+.+	    Any character one or more times	
+    The game starts at 7 p.m. on May 2, 2024.
+
+\d{1,2} (?:a.m.|p.m.)	One or two digits followed by a space and a.m. or p.m. in a noncapture group	
+    7 p.m.
+
+^\w+	One or more word characters at the start	
+    The
+
+\w+.$	One or more word characters followed by any character at the end	
+    2024.
+
+May|June	Either of the words May or June	
+    May
+
+\d{4}	Four digits	
+    2024
+    
+May \d, \d{4}	May followed by a space, digit, comma, space, and four digits	
+    May 2, 2024
+*/
+
+substring(string from pattern) 
+
+SELECT substring('The game starts at 7 p.m. on May 2, 2024.' from '\d{4}');
+
+
+-- Using regular expressions in a WHERE clause
+
+SELECT county_name
+FROM us_counties_pop_est_2019
+WHERE county_name ~* '(lade|lare)'     -- ~ case sensitive LIKE
+ORDER BY county_name;
+
+SELECT county_name
+FROM us_counties_pop_est_2019
+WHERE county_name ~* 'ash' AND county_name !~ 'Wash'    -- ~* case insensitive ILIKE
+ORDER BY county_name;
+
+-- Regex functions to replace or split text
+SELECT regexp_replace('05/12/2024', '\d{4}', '2023');
+SELECT regexp_split_to_table('Four,score,and,seven,years,ago', ',');
+SELECT regexp_split_to_array('Phil Mike Tony Steve', ' '); -- delimeter sa specifikuje
+
+SELECT array_length(regexp_split_to_array('Phil Mike Tony Steve', ' '), 1);
+
+-- Turning Text to Data with Regular Expression Functions
+
+
+CREATE TABLE crime_reports (
+    crime_id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    case_number text,
+    date_1 timestamptz,
+    date_2 timestamptz,
+    street text,
+    city text,
+    crime_type text,
+    description text,
+    original_text text NOT NULL
+);
+
+COPY crime_reports (original_text)
+FROM '/home/adrian/gits/practical-sql-2/Chapter_14/crime_reports.csv'
+WITH (FORMAT CSV, HEADER OFF, QUOTE '"');
+
+SELECT original_text FROM crime_reports;
+
+
+-- Using regexp_match() to find the first date
+SELECT crime_id,
+       regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}')
+FROM crime_reports
+ORDER BY crime_id;
+
+-- Using the regexp_matches() function with the 'g' flag lebo su sem tam dva date
+SELECT crime_id,
+       regexp_matches(original_text, '\d{1,2}\/\d{1,2}\/\d{2}', 'g')
+FROM crime_reports
+ORDER BY crime_id;
+
+-- Using regexp_match() to find the second date
+-- Note that the result includes an unwanted hyphen
+SELECT crime_id,
+       regexp_match(original_text, '-\d{1,2}\/\d{1,2}\/\d{2}')
+FROM crime_reports
+ORDER BY crime_id;
+
+-- Using a capture group to return only the date
+-- Eliminates the hyphen
+SELECT crime_id,
+       regexp_match(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})')
+FROM crime_reports
+ORDER BY crime_id;
+
+-- ostatne casti
+-- Matching case number, date, crime type, and city
+
+SELECT
+    regexp_match(original_text, '(?:C0|SO)[0-9]+') AS case_number,
+    regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}') AS date_1,
+    regexp_match(original_text, '\n(?:\w+ \w+|\w+)\n(.*):') AS crime_type,
+    regexp_match(original_text, '(?:Sq.|Plz.|Dr.|Ter.|Rd.)\n(\w+ \w+|\w+)\n')
+        AS city
+FROM crime_reports
+ORDER BY crime_id;
+
+-- Get all parsed elements at once
+
+SELECT crime_id,
+       regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}') AS date_1,
+       CASE WHEN EXISTS (SELECT regexp_matches(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})'))
+            THEN regexp_match(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})')
+            ELSE NULL
+            END AS date_2,
+       regexp_match(original_text, '\/\d{2}\n(\d{4})') AS hour_1,
+       CASE WHEN EXISTS (SELECT regexp_matches(original_text, '\/\d{2}\n\d{4}-(\d{4})'))
+            THEN regexp_match(original_text, '\/\d{2}\n\d{4}-(\d{4})')
+            ELSE NULL
+            END AS hour_2,
+       regexp_match(original_text, 'hrs.\n(\d+ .+(?:Sq.|Plz.|Dr.|Ter.|Rd.))') AS street,
+       regexp_match(original_text, '(?:Sq.|Plz.|Dr.|Ter.|Rd.)\n(\w+ \w+|\w+)\n') AS city,
+       regexp_match(original_text, '\n(?:\w+ \w+|\w+)\n(.*):') AS crime_type,
+       regexp_match(original_text, ':\s(.+)(?:C0|SO)') AS description,
+       regexp_match(original_text, '(?:C0|SO)[0-9]+') AS case_number
+FROM crime_reports
+ORDER BY crime_id;
+
+
+-- Listing 14-11: Retrieving a value from within an array
+
+SELECT
+    crime_id,
+    (regexp_match(original_text, '(?:C0|SO)[0-9]+'))[1]
+        AS case_number
+FROM crime_reports
+ORDER BY crime_id;
+
+-- Updating the crime_reports date_1 column
+
+UPDATE crime_reports
+SET date_1 = 
+(
+    (regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}'))[1]
+        || ' ' ||
+    (regexp_match(original_text, '\/\d{2}\n(\d{4})'))[1] 
+        ||' US/Eastern'
+)::timestamptz
+RETURNING crime_id, date_1, original_text;
+
+
+-- Updating all crime_reports columns
+
+UPDATE crime_reports
+SET date_1 = 
+    (
+      (regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}'))[1]
+          || ' ' ||
+      (regexp_match(original_text, '\/\d{2}\n(\d{4})'))[1] 
+          ||' US/Eastern'
+    )::timestamptz,
+             
+    date_2 = 
+    CASE 
+    -- if there is no second date but there is a second hour
+        WHEN (SELECT regexp_match(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})') IS NULL)
+                     AND (SELECT regexp_match(original_text, '\/\d{2}\n\d{4}-(\d{4})') IS NOT NULL)
+        THEN 
+          ((regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}'))[1]
+              || ' ' ||
+          (regexp_match(original_text, '\/\d{2}\n\d{4}-(\d{4})'))[1] 
+              ||' US/Eastern'
+          )::timestamptz 
+
+    -- if there is both a second date and second hour
+        WHEN (SELECT regexp_match(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})') IS NOT NULL)
+              AND (SELECT regexp_match(original_text, '\/\d{2}\n\d{4}-(\d{4})') IS NOT NULL)
+        THEN 
+          ((regexp_match(original_text, '-(\d{1,2}\/\d{1,2}\/\d{2})'))[1]
+              || ' ' ||
+          (regexp_match(original_text, '\/\d{2}\n\d{4}-(\d{4})'))[1] 
+              ||' US/Eastern'
+          )::timestamptz 
+    END,
+    street = (regexp_match(original_text, 'hrs.\n(\d+ .+(?:Sq.|Plz.|Dr.|Ter.|Rd.))'))[1],
+    city = (regexp_match(original_text,
+                           '(?:Sq.|Plz.|Dr.|Ter.|Rd.)\n(\w+ \w+|\w+)\n'))[1],
+    crime_type = (regexp_match(original_text, '\n(?:\w+ \w+|\w+)\n(.*):'))[1],
+    description = (regexp_match(original_text, ':\s(.+)(?:C0|SO)'))[1],
+    case_number = (regexp_match(original_text, '(?:C0|SO)[0-9]+'))[1];
+
+
+
+SELECT date_1,
+       street,
+       city,
+       crime_type
+FROM crime_reports
+ORDER BY crime_id;
+
+-- FULL TEXT SEARCH
+
+-- Full-text search operators:
+-- & (AND)
+-- | (OR)
+-- ! (NOT)
+
+SELECT to_tsvector('english', 'I am walking across the sitting room to sit with you.');
+
+SELECT cfgname FROM pg_ts_config;
+
+
+SELECT to_tsquery('english', 'walking & sitting');
+
+-- Querying a tsvector type with a tsquery
+
+SELECT to_tsvector('english', 'I am walking across the sitting room') @@
+       to_tsquery('english', 'walking & sitting');
+
+SELECT to_tsvector('english', 'I am walking across the sitting room') @@ 
+       to_tsquery('english', 'walking & running');
+
+
+CREATE TABLE president_speeches (
+    president text NOT NULL,
+    title text NOT NULL,
+    speech_date date NOT NULL,
+    speech_text text NOT NULL,
+    search_speech_text tsvector,
+    CONSTRAINT speech_key PRIMARY KEY (president, speech_date)
+);
+
+COPY president_speeches (president, title, speech_date, speech_text)
+FROM '/home/adrian/gits/practical-sql-2/Chapter_14/president_speeches.csv'
+WITH (FORMAT CSV, DELIMITER '|', HEADER OFF, QUOTE '@');
+
+SELECT * FROM president_speeches ORDER BY speech_date;
+
+
+-- Converting speeches to tsvector in the search_speech_text column
+UPDATE president_speeches
+SET search_speech_text = to_tsvector('english', speech_text);
+
+-- Creating a GIN index for text search
+CREATE INDEX search_idx ON president_speeches USING gin(search_speech_text);
+
+-- Finding speeches containing the word "Vietnam"
+SELECT president, speech_date
+FROM president_speeches
+WHERE search_speech_text @@ to_tsquery('english', 'Vietnam')
+ORDER BY speech_date;
+
+-- Finding speeches with the word "transportation" but not "roads"
+
+SELECT president,
+       speech_date,
+       ts_headline(speech_text,
+                   to_tsquery('english', 'transportation & !roads'),
+                   'StartSel = <,
+                    StopSel = >,
+                    MinWords=5,
+                    MaxWords=7,
+                    MaxFragments=1')
+FROM president_speeches
+WHERE search_speech_text @@
+      to_tsquery('english', 'transportation & !roads')
+ORDER BY speech_date;
+
+
+-- Finding speeches where "defense" follows "military"
+SELECT president,
+       speech_date,
+       ts_headline(speech_text, 
+                   to_tsquery('english', 'military <-> defense'),
+                   'StartSel = <,
+                    StopSel = >,
+                    MinWords=5,
+                    MaxWords=7,
+                    MaxFragments=1')
+FROM president_speeches
+WHERE search_speech_text @@ 
+      to_tsquery('english', 'military <-> defense')
+ORDER BY speech_date;
+
+-- Example with a distance of 2:
+SELECT president,
+       speech_date,
+       ts_headline(speech_text, 
+                   to_tsquery('english', 'military <2> defense'),
+                   'StartSel = <,
+                    StopSel = >,
+                    MinWords=5,
+                    MaxWords=7,
+                    MaxFragments=2')
+FROM president_speeches
+WHERE search_speech_text @@ 
+      to_tsquery('english', 'military <2> defense')
+ORDER BY speech_date;
+
+-- Scoring relevance with ts_rank()
+SELECT president,
+       speech_date,
+       ts_rank(search_speech_text,
+               to_tsquery('english', 'war & security & threat & enemy'))
+               AS score
+FROM president_speeches
+WHERE search_speech_text @@ 
+      to_tsquery('english', 'war & security & threat & enemy')
+ORDER BY score DESC
+LIMIT 5;
+
+-- Normalizing ts_rank() by speech length
+SELECT president,
+       speech_date,
+       ts_rank(search_speech_text,
+               to_tsquery('english', 'war & security & threat & enemy'), 2)::numeric 
+               AS score
+FROM president_speeches
+WHERE search_speech_text @@ 
+      to_tsquery('english', 'war & security & threat & enemy')
+ORDER BY score DESC
+LIMIT 5;
+
+-- zadanie
+SELECT replace('Williams, Sr.', ', ', ' ');
+SELECT regexp_replace('Williams, Sr.', ', ', ' ');
+SELECT (regexp_match('Williams, Sr.', '.*, (.*)'))[1];
+
+WITH
+    word_list (word)
+AS
+    (
+        SELECT regexp_split_to_table(speech_text, '\s') AS word
+        FROM president_speeches
+        WHERE speech_date = '1946-01-21'
+    )
+
+SELECT lower(
+               replace(replace(replace(word, ',', ''), '.', ''), ':', '')
+             ) AS cleaned_word,
+       count(*)
+FROM word_list
+WHERE length(word) >= 5
+GROUP BY cleaned_word
+ORDER BY count(*) DESC;
+
+
+SELECT president,
+       speech_date,
+       ts_rank_cd(search_speech_text, search_query, 2) AS rank_score
+FROM president_speeches,
+     to_tsquery('war & security & threat & enemy') search_query
+WHERE search_speech_text @@ search_query
+ORDER BY rank_score DESC
+LIMIT 5;
+
+
