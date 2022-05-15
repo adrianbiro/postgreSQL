@@ -129,3 +129,78 @@ SELECT film ->> 'title' AS title,
        film ->> 'genre' AS genre
 FROM films
 WHERE film ?& '{rating, genre}';
+
+
+
+
+-- Creating and loading an earthquakes table
+
+CREATE TABLE earthquakes (
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    earthquake jsonb NOT NULL
+);
+
+COPY earthquakes (earthquake)
+FROM '/home/adrian/gits/practical-sql-2/Chapter_16/earthquakes.json';
+
+CREATE INDEX idx_earthquakes ON earthquakes USING GIN (earthquake);
+
+SELECT * FROM earthquakes;
+
+
+-- Listing 16-12: Retrieving the earthquake time
+-- Note that the time is stored in epoch format
+
+SELECT id, earthquake #>> '{properties, time}' AS time 
+FROM earthquakes
+ORDER BY id LIMIT 5;
+
+-------
+-------
+
+-- GENERATING AND MANIPULATING JSON
+
+-- Listing 16-21: Turning query results into JSON with to_json()
+
+-- Convert an entire row from the table
+SELECT to_json(employees) AS json_rows
+FROM employees;
+
+-- Specifying columns to convert to JSON
+-- Returns key names as f1, f2, etc.
+SELECT to_json(row(emp_id, last_name)) AS json_rows
+FROM employees;
+
+--  Generating key names with a subquery
+SELECT to_json(employees) AS json_rows
+FROM (
+    SELECT emp_id, last_name AS ln FROM employees
+) AS employees;
+
+-- Aggregating the rows and converting to JSON
+SELECT json_agg(to_json(employees)) AS json
+FROM (
+    SELECT emp_id, last_name AS ln FROM employees
+) AS employees;
+
+-- JSON PROCESSING FUNCTIONS
+
+-- Finding the length of an array
+
+SELECT id,
+       film ->> 'title' AS title,
+       jsonb_array_length(film -> 'characters') AS num_characters
+FROM films
+ORDER BY id;
+
+
+
+
+
+
+
+
+
+
+
+
