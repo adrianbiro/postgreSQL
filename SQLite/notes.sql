@@ -1,8 +1,8 @@
-qlite3 test.db // open sqlite and provide a database name
+qlite3 test.db -- open sqlite and provide a database name
 
-// Creates a table in the database
-// Primary Key automatically generates values that start at 1 and increase by 1
-// name is a text field that will hold employee names
+-- Creates a table in the database
+-- Primary Key automatically generates values that start at 1 and increase by 1
+-- name is a text field that will hold employee names
 
 create table employee (id integer primary key, name text); 
 
@@ -21,9 +21,9 @@ employee
 select * FROM employee WHERE name == "Wanda Maximoff";
 5|Wanda Maximoff
 
-// In column mode, each record is shown on a separate line with the data aligned in columns
+-- In column mode, each record is shown on a separate line with the data aligned in columns
 
-// headers on shows the column names, if off they wouldn't show
+-- headers on shows the column names, if off they wouldn't show
 */
 .mode column
 .headers on
@@ -714,7 +714,7 @@ VALUES
 INSERT INTO
   test
 VALUES
-  ('2013-06-10', 'T', 2);
+  ('2022-06-15', 'T', 2);
 
 -- Put quotes around date
 -- student_id, test_id, score
@@ -772,20 +772,20 @@ VALUES
 INSERT INTO
   absence
 VALUES
-  (4, '2013-06-10');
+  (4, '2022-06-15');
 
 INSERT INTO
   absence
 VALUES
-  (9, '2013-06-10');
+  (9, '2022-06-15');
 
 INSERT INTO
   absence
 VALUES
-  (10, '2013-06-10');
+  (10, '2022-06-15');
 
 -- SELECT QUERIES
--- Show test results for all students for the quiz given on 2013-06-08
+-- Show test results for all students for the quiz given on 2022-06-15
 -- We need to pull this information from 2 tables this time
 SELECT
   student_id,
@@ -796,7 +796,7 @@ FROM
   test,
   test_score
 WHERE
-  date = '2013-06-08'
+  date = '2022-06-15'
   AND test.test_id = test_score.test_id;
 
 -- Print out the students name with the scores
@@ -813,7 +813,7 @@ FROM
   test_score,
   student
 WHERE
-  date = '2013-06-08'
+  date = '2022-06-15'
   AND test.test_id = test_score.test_id
   AND test_score.student_id = student.id_number;
 
