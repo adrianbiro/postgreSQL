@@ -592,8 +592,7 @@ CREATE TABLE
   );
 
 -------
-INSERT
-VALUES
+
 INSERT INTO
   student (name, sex)
 VALUES
@@ -714,7 +713,7 @@ VALUES
 INSERT INTO
   test
 VALUES
-  ('2022-06-15', 'T', 2);
+  ('2022-06-16', 'T', 2);
 
 -- Put quotes around date
 -- student_id, test_id, score
@@ -772,20 +771,20 @@ VALUES
 INSERT INTO
   absence
 VALUES
-  (4, '2022-06-15');
+  (4, '2022-06-16');
 
 INSERT INTO
   absence
 VALUES
-  (9, '2022-06-15');
+  (9, '2022-06-16');
 
 INSERT INTO
   absence
 VALUES
-  (10, '2022-06-15');
-
+  (10, '2022-06-16');
+----------------------------------------------------------------------------------- tu
 -- SELECT QUERIES
--- Show test results for all students for the quiz given on 2022-06-15
+-- Show test results for all students for the quiz given on 2022-06-16
 -- We need to pull this information from 2 tables this time
 SELECT
   student_id,
@@ -796,7 +795,7 @@ FROM
   test,
   test_score
 WHERE
-  date = '2022-06-15'
+  date = '2022-06-16'
   AND test.test_id = test_score.test_id;
 
 -- Print out the students name with the scores
@@ -813,7 +812,7 @@ FROM
   test_score,
   student
 WHERE
-  date = '2022-06-15'
+  date = '2022-06-16'
   AND test.test_id = test_score.test_id
   AND test_score.student_id = student.id_number;
 
@@ -955,6 +954,9 @@ WHERE
 GROUP BY
   name;
 
+-- sqlite> .tables
+select * from ScoreOver40; 
+
 drop view
   ScoreOver40;
 
@@ -995,13 +997,16 @@ from
   absence;
 
 -- Show all absences
-UPDATE
-  test_score
-SET
-  score = 20
-WHERE
-  test_id = 2
-  AND student_id = 9;
+/*
+sqlite> UPDATE test_score SET score = 20
+   ...> WHERE test_id = 2
+   ...> and student_id =9;
+sqlite> SELECT * from L
+LAST   LEFT   LIKE   LIMIT  Log    
+sqlite> SELECT * from Log;
+1|2|2022-06-16|9
+sqlite> 
+*/
 
 
 
